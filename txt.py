@@ -10,7 +10,7 @@ def get_posts(url):
     soup = BeautifulSoup(response.content, 'html.parser')
 
     posts = soup.select('article.Post')
-    
+
     if not posts:
         return None
 
@@ -18,16 +18,16 @@ def get_posts(url):
 
     for post in posts:
         date = post.select_one('time')['datetime']
-    title = post.select_one('h2 a')
-    content_area = post.select_one('.ContentArea')
-    content = content_area.get_text(separator=" ", strip=True) if content_area else 'N/A'
-    
-    post_data.append({
-        'title': title.text.strip(),
-        'url': title['href'],
-        'content': content,
-        'date': datetime.fromisoformat(date.strip()) if date else None
-    })
+        title = post.select_one('h2 a')
+        content_area = post.select_one('.ContentArea')
+        content = content_area.get_text(separator=" ", strip=True) if content_area else 'N/A'
+
+        post_data.append({
+            'title': title.text.strip(),
+            'url': title['href'],
+            'content': content,
+            'date': datetime.fromisoformat(date.strip()) if date else None
+        })
 
     return post_data
 
@@ -66,5 +66,5 @@ with ThreadPoolExecutor(max_workers=max_workers) as executor:
 
         current_page += max_workers
 
-sorted_posts = sorted(all_posts, key=lambda post: post['date'], reverse=True)
+sorted_posts = sorted(all_posts, key=lambda post: post['date'], reverse=False)  # Sort posts from newest to oldest
 write_posts_to_file(sorted_posts)
