@@ -2,7 +2,11 @@ import requests
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from pdfdocument.document import PDFDocument
+
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
 
 session = requests.Session()
 
@@ -11,7 +15,7 @@ def get_posts(url):
     soup = BeautifulSoup(response.content, 'html.parser')
 
     posts = soup.select('article.Post')
-    
+
     if not posts:
         return None
 
@@ -22,7 +26,7 @@ def get_posts(url):
         title = post.select_one('h2 a')
         content_area = post.select_one('.ContentArea')
         content = content_area.get_text(separator=" ", strip=True) if content_area else 'N/A'
-        
+
         post_data.append({
             'title': title.text.strip(),
             'url': title['href'],
@@ -39,18 +43,25 @@ def process_page(current_page):
     return posts
 
 def write_posts_to_pdf(posts):
-    pdf = PDFDocument("output/posts.pdf")
-    pdf.init_report()
+    doc = SimpleDocTemplate("output/final_output.pdf", pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
+
+    content_style = styles["BodyText"].clone('content_style')
+    content_style.fontSize = 12
+    content_style.spaceBefore = 25
+
 
     for post in posts:
-        pdf.h2(post['title'])
-        pdf.p(f"URL: {post['url']}")
-        pdf.p(f"Date: {post['date'].isoformat() if post['date'] else 'N/A'}")
-        pdf.p("Content:")
-        pdf.p(post['content'])
-        pdf.pagebreak()
+        title = Paragraph(f"{post['title']}", styles["Heading2"])
+        url = Paragraph(f"<a href='{post['url']}'>{post['url']}</a>", styles["BodyText"])
+        content = Paragraph(post['content'], content_style)
+        date = Paragraph(f"Date: {post['date'].isoformat() if post['date'] else 'N/A'}", styles["BodyText"])
 
-    pdf.generate()
+        story.extend([title, url, content, date, PageBreak()])
+
+
+    doc.build(story)
 
 base_url = 'https://avc.com'
 current_page = 1
