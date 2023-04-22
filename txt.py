@@ -39,7 +39,7 @@ def process_page(current_page):
     return posts
 
 def write_posts_to_csv(posts):
-    with open('output/final_output.csv', 'w', newline='', encoding='utf-8') as csvfile:
+    with open('output/all_posts.csv', 'w', newline='', encoding='utf-8') as csvfile:
         fieldnames = ['counter', 'title', 'url', 'content', 'date']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()

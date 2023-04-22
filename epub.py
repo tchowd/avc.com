@@ -80,7 +80,7 @@ def write_posts_to_epub(posts):
     book.toc = [('Table of Contents', toc)] + [(chapter.title, chapter) for chapter in chapters]
 
     # Write the EPUB file
-    epub.write_epub('output/final_output.epub', book)
+    epub.write_epub('output/all_posts.epub', book)
 
 base_url = 'https://avc.com'
 current_page = 1

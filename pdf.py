@@ -63,7 +63,7 @@ def generate_toc(posts, styles):
 
 
 def write_posts_to_pdf(posts):
-    doc = SimpleDocTemplate("output/final_output.pdf", pagesize=letter)
+    doc = SimpleDocTemplate("output/all_posts.pdf", pagesize=letter)
     styles = getSampleStyleSheet()
     story = []
 

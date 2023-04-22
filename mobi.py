@@ -71,10 +71,10 @@ def write_posts_to_epub(posts):
     book.add_item(epub.EpubNav())
 
     # Save the EPUB file
-    epub.write_epub('output/posts.epub', book)
+    epub.write_epub('output/all_posts.epub', book)
 
 def convert_epub_to_mobi():
-    subprocess.run(['kindlegen', 'posts.epub'])
+    subprocess.run(['kindlegen', 'all_posts.epub'])
 
 base_url = 'https://avc.com'
 current_page = 1
