@@ -4,9 +4,10 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
+from reportlab.lib import colors
 
 session = requests.Session()
 
@@ -42,6 +43,25 @@ def process_page(current_page):
     posts = get_posts(url)
     return posts
 
+def generate_toc(posts, styles):
+    data = [["#", "Title", "Page"]]
+    for index, post in enumerate(posts):
+        data.append([index + 1, post['title'], index + 2])
+
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    return table
+
+
 def write_posts_to_pdf(posts):
     doc = SimpleDocTemplate("output/final_output.pdf", pagesize=letter)
     styles = getSampleStyleSheet()
@@ -51,6 +71,9 @@ def write_posts_to_pdf(posts):
     content_style.fontSize = 12
     content_style.spaceBefore = 25
 
+    toc = generate_toc(posts, styles)
+    story.append(toc)
+    story.append(PageBreak())
 
     for post in posts:
         title = Paragraph(f"{post['title']}", styles["Heading2"])
@@ -60,7 +83,6 @@ def write_posts_to_pdf(posts):
 
         story.extend([title, url, content, date, PageBreak()])
 
-
     doc.build(story)
 
 base_url = 'https://avc.com'
@@ -69,6 +91,7 @@ max_workers = 10
 end_page = 100
 
 all_posts = []
+
 
 with ThreadPoolExecutor(max_workers=max_workers) as executor:
     while current_page <= end_page:

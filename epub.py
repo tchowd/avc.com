@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-
+import ebooklib
 from ebooklib import epub
 
 session = requests.Session()
@@ -39,57 +39,47 @@ def process_page(current_page):
     posts = get_posts(url)
     return posts
 
+def create_epub_chapter(post):
+    title = post['title']
+    url = post['url']
+    content = post['content']
+    date = post['date'].isoformat() if post['date'] else 'N/A'
+
+    html_content = f'''
+    <h2>{title}</h2>
+    <p><a href="{url}">{url}</a></p>
+    <p>{content}</p>
+    <p>Date: {date}</p>
+    '''
+    chapter = epub.EpubHtml(title=title, file_name=f"{title.replace(' ', '_')}.xhtml", content=html_content)
+    return chapter
+
 def write_posts_to_epub(posts):
     book = epub.EpubBook()
 
-    # Set metadata
-    book.set_identifier('sample-blog-posts')
+    # Set book metadata
+    book.set_identifier('sample123456')
     book.set_title('Sample Blog Posts')
     book.set_language('en')
-    book.add_author('Your Name')
+    book.add_author('Blog Author')
 
-    # Define styles
-    style = '''
-    @namespace epub "http://www.idpf.org/2007/ops";
-    body {
-        font-family: Georgia, Times, serif;
-    }
-    h2 {
-        text-align: left;
-        text-transform: uppercase;
-        font-weight: 200;
-    }
-    '''
+    # Create a table of contents
+    toc = epub.EpubHtml(title='Table of Contents', file_name='toc.xhtml')
+    toc.set_content('<h1>Table of Contents</h1>')
+    book.add_item(toc)
 
-    # Add style to the book
-    nav_css = epub.EpubItem(uid="style_nav", file_name="style/nav.css", media_type="text/css", content=style)
-    book.add_item(nav_css)
+    # Create chapters
+    chapters = [create_epub_chapter(post) for post in posts]
+    for chapter in chapters:
+        book.add_item(chapter)
 
-    # Add content to the book
-    spine = ['nav']
-    for post in posts:
-        title = post['title']
-        url = post['url']
-        content = post['content']
-        date = post['date'].isoformat() if post['date'] else 'N/A'
+    # Create a spine
+    book.spine = ['nav', toc] + chapters
 
-        c1 = epub.EpubHtml(title=title, file_name=f'post_{len(spine)}.xhtml', lang='en')
-        c1.content = f'<h2>{title}</h2><p><a href="{url}">{url}</a></p><p>{content}</p><p>Date: {date}</p>'
-        c1.add_item(nav_css)
-        book.add_item(c1)
-        spine.append(c1)
+    # Create a table of contents in the book
+    book.toc = [('Table of Contents', toc)] + [(chapter.title, chapter) for chapter in chapters]
 
-    # Define Table of Contents
-    book.toc = [(epub.Link(f'post_{i}.xhtml', post['title'], f'post_{i}') for i, post in enumerate(posts, 1))]
-
-    # Add navigation files
-    book.add_item(epub.EpubNcx())
-    book.add_item(epub.EpubNav())
-
-    # Set spine
-    book.spine = spine
-
-    # Create EPUB file
+    # Write the EPUB file
     epub.write_epub('output/final_output.epub', book)
 
 base_url = 'https://avc.com'
@@ -112,6 +102,6 @@ with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 all_posts.extend(result)
 
         current_page += max_workers
-        
+
 sorted_posts = sorted(all_posts, key=lambda post: post['date'], reverse=True)
 write_posts_to_epub(sorted_posts)
