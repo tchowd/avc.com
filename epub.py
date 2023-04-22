@@ -85,12 +85,12 @@ def write_posts_to_epub(posts):
 base_url = 'https://avc.com'
 current_page = 1
 max_workers = 10
-end_page = 100
+# end_page = 100
 
 all_posts = []
 
 with ThreadPoolExecutor(max_workers=max_workers) as executor:
-    while current_page <= end_page:
+    while True:
         futures = [executor.submit(process_page, current_page + i) for i in range(max_workers)]
         results = [future.result() for future in futures]
 

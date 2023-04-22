@@ -79,7 +79,7 @@ def convert_epub_to_mobi():
 base_url = 'https://avc.com'
 current_page = 1
 max_workers = 10
-end_page = 100
+# end_page = 100
 
 # Fetch and save all the posts
 all_posts = []
@@ -87,7 +87,7 @@ current_page = 1
 last_page = 100
 
 with ThreadPoolExecutor(max_workers=10) as executor:
-    while current_page <= last_page:
+    while True:
         print(f"Fetching page {current_page}")
 
         futures = [executor.submit(get_posts, f'https://avc.com/page/{page}/') for page in range(current_page, current_page + 10)]

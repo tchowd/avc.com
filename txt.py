@@ -58,7 +58,7 @@ def write_posts_to_csv(posts):
 base_url = 'https://avc.com'
 current_page = 1
 max_workers = 10
-end_page = 100
+# end_page = 100
 
 all_posts = []
 
