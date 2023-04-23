@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-import ebooklib
+
 from ebooklib import epub
 
 session = requests.Session()
@@ -39,58 +39,51 @@ def process_page(current_page):
     posts = get_posts(url)
     return posts
 
-def create_epub_chapter(post):
-    title = post['title']
-    url = post['url']
-    content = post['content']
-    date = post['date'].isoformat() if post['date'] else 'N/A'
-
-    html_content = f'''
-    <h2>{title}</h2>
-    <p><a href="{url}">{url}</a></p>
-    <p>{content}</p>
-    <p>Date: {date}</p>
-    '''
-    chapter = epub.EpubHtml(title=title, file_name=f"{title.replace(' ', '_')}.xhtml", content=html_content)
-    return chapter
-
-def write_posts_to_epub(posts):
+def write_posts_to_mobi(posts):
     book = epub.EpubBook()
 
-    # Set book metadata
-    book.set_identifier('sample123456')
-    book.set_title('Sample Blog Posts')
+    book.set_identifier('avc-blog-collection')
+    book.set_title('AVC Blog Collection')
     book.set_language('en')
-    book.add_author('Blog Author')
+    book.add_author('AVC Blog Author')
 
-    # Create a table of contents
-    toc = epub.EpubHtml(title='Table of Contents', file_name='toc.xhtml')
-    toc.set_content('<h1>Table of Contents</h1>')
-    book.add_item(toc)
+    toc = []  # Table of contents
+    spine = ['nav']
+    for index, post in enumerate(posts):
+        title = post['title']
+        content = f"<h2>{title}</h2>"
+        content += f"<a href='{post['url']}'>{post['url']}</a><br><br>"
+        content += post['content']
+        content += f"<p>Date: {post['date'].isoformat() if post['date'] else 'N/A'}</p>"
 
-    # Create chapters
-    chapters = [create_epub_chapter(post) for post in posts]
-    for chapter in chapters:
+        chapter = epub.EpubHtml(title=f"Chapter {index + 1}: {title}", file_name=f'chapter_{index + 1}.xhtml', lang='en')
+        chapter.set_content(content)
         book.add_item(chapter)
 
-    # Create a spine
-    book.spine = ['nav', toc] + chapters
+        toc.append(chapter)  # Add the chapter to the table of contents
+        spine.append(chapter)
 
-    # Create a table of contents in the book
-    book.toc = [('Table of Contents', toc)] + [(chapter.title, chapter) for chapter in chapters]
+    book.toc = toc  # Set the table of contents
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
 
-    # Write the EPUB file
-    epub.write_epub('output/all_posts.epub', book)
+    book.spine = spine
+
+    epub.write_epub("output/final_output.epub", book)
+
+    # Convert EPUB to MOBI using Calibre's ebook-convert command line tool
+    import os
+    os.system("ebook-convert output/final_output.epub output/final_output.mobi")
 
 base_url = 'https://avc.com'
 current_page = 1
 max_workers = 10
-# end_page = 100
+end_page = 100
 
 all_posts = []
 
 with ThreadPoolExecutor(max_workers=max_workers) as executor:
-    while True:
+    while current_page <= end_page:
         futures = [executor.submit(process_page, current_page + i) for i in range(max_workers)]
         results = [future.result() for future in futures]
 
@@ -104,4 +97,4 @@ with ThreadPoolExecutor(max_workers=max_workers) as executor:
         current_page += max_workers
 
 sorted_posts = sorted(all_posts, key=lambda post: post['date'], reverse=True)
-write_posts_to_epub(sorted_posts)
+write_posts_to_mobi(sorted_posts)

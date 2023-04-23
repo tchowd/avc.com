@@ -2,7 +2,7 @@ import os
 from invoke import task
 
 def remove_existing_output_files():
-    output_files = ["all_posts.txt", "all_posts.pdf", "all_posts.epub", "all_posts.mobi"]
+    output_files = ["all_posts.csv", "all_posts.epub", "all_posts.pdf", "final_output.mobi", "final_output.epub"]
     for file in output_files:
         if os.path.exists(file):
             os.remove(file)
@@ -31,6 +31,6 @@ def create_mobi(c):
 def clean(c):
     remove_existing_output_files()
 
-@task(pre=[fetch_posts, create_pdf, create_epub, create_mobi])
+@task(pre=[clean, fetch_posts, create_pdf, create_epub, create_mobi])
 def all(c):
     pass
