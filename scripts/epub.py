@@ -57,29 +57,23 @@ def create_epub_chapter(post):
 def write_posts_to_epub(posts):
     book = epub.EpubBook()
 
-    # Set book metadata
     book.set_identifier('sample123456')
     book.set_title('Sample Blog Posts')
     book.set_language('en')
     book.add_author('Blog Author')
 
-    # Create a table of contents
     toc = epub.EpubHtml(title='Table of Contents', file_name='toc.xhtml')
     toc.set_content('<h1>Table of Contents</h1>')
     book.add_item(toc)
 
-    # Create chapters
     chapters = [create_epub_chapter(post) for post in posts]
     for chapter in chapters:
         book.add_item(chapter)
 
-    # Create a spine
     book.spine = ['nav', toc] + chapters
 
-    # Create a table of contents in the book
     book.toc = [('Table of Contents', toc)] + [(chapter.title, chapter) for chapter in chapters]
 
-    # Write the EPUB file
     epub.write_epub('output/all_posts.epub', book)
 
 base_url = 'https://avc.com'

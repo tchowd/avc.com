@@ -1,8 +1,8 @@
 import requests
+import os
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-
 from ebooklib import epub
 
 session = requests.Session()
@@ -60,10 +60,10 @@ def write_posts_to_mobi(posts):
         chapter.set_content(content)
         book.add_item(chapter)
 
-        toc.append(chapter)  # Add the chapter to the table of contents
+        toc.append(chapter)  
         spine.append(chapter)
 
-    book.toc = toc  # Set the table of contents
+    book.toc = toc  
     book.add_item(epub.EpubNcx())
     book.add_item(epub.EpubNav())
 
@@ -71,8 +71,6 @@ def write_posts_to_mobi(posts):
 
     epub.write_epub("output/all_posts.epub", book)
 
-    # Convert EPUB to MOBI using Calibre's ebook-convert command line tool
-    import os
     os.system("ebook-convert output/all_posts.epub output/all_posts.mobi")
 
 base_url = 'https://avc.com'
