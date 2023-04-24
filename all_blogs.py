@@ -40,17 +40,21 @@ def process_page(current_page):
 
 def write_posts_to_csv(posts):
     with open('all_posts.csv', 'w', newline='', encoding='utf-8') as csvfile:
-        fieldnames = ['title', 'url', 'content', 'date']
+        fieldnames = ['post_number', 'title', 'url', 'content', 'date']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter='|')
         writer.writeheader()
+        csvfile.write('| ------------- | ------------- | ------------- | ------------- | ------------- |\n')
 
+        post_number = 1
         for post in posts:
             writer.writerow({
+                'post_number': post_number,
                 'title': post['title'],
                 'url': post['url'],
                 'content': post['content'],
                 'date': post['date'].isoformat() if post['date'] else 'N/A'
             })
+            post_number += 1
 
 base_url = 'https://avc.com'
 current_page = 1
