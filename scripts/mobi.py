@@ -69,11 +69,11 @@ def write_posts_to_mobi(posts):
 
     book.spine = spine
 
-    epub.write_epub("output/final_output.epub", book)
+    epub.write_epub("output/all_posts.epub", book)
 
     # Convert EPUB to MOBI using Calibre's ebook-convert command line tool
     import os
-    os.system("ebook-convert output/final_output.epub output/final_output.mobi")
+    os.system("ebook-convert output/all_posts.epub output/all_posts.mobi")
 
 base_url = 'https://avc.com'
 current_page = 1
